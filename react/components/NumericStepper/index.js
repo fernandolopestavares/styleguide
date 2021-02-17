@@ -24,13 +24,13 @@ const validateValue = (value, min, max, defaultValue) => {
   return parseInt(value, 10)
 }
 
-const formattedDisplayValue = (value, unitMultiplier, suffix) => {
+const formattedDisplayValue = (value, suffix) => {
   const parsedSuffix = suffix ? ` ${suffix}` : suffix
-  return `${Math.round((value * unitMultiplier + Number.EPSILON) * 100) /
+  return `${Math.round((value + Number.EPSILON) * 100) /
     100}${parsedSuffix}`
 }
 
-const validateDisplayValue = (value, min, max, suffix, unitMultiplier) => {
+const validateDisplayValue = (value, min, max, suffix) => {
   // This function validates the input as the user types
   // It allows for temporarily invalid values (namely, empty string and minus sign without a number following it)
   // However, it prevents values out of boundaries, and invalid characters, e.g. letters
@@ -41,11 +41,11 @@ const validateDisplayValue = (value, min, max, suffix, unitMultiplier) => {
   const parsedValue = parseFloat(value)
 
   if (value === '') {
-    return formattedDisplayValue(value, unitMultiplier, suffix)
+    return formattedDisplayValue(value, suffix)
   }
   // Only allows typing the negative sign if negative values are allowed
   if (value === '-' && min < 0) {
-    return formattedDisplayValue(value, unitMultiplier, suffix)
+    return formattedDisplayValue(value, suffix)
   }
   if (isNaN(parsedValue)) {
     return ''
@@ -53,12 +53,12 @@ const validateDisplayValue = (value, min, max, suffix, unitMultiplier) => {
   // Only limit by lower bounds if the min value is 1
   // Otherwise, it could prevent typing, for example, 10 if the min value is 2
   if (parsedValue < min && min === 1) {
-    return formattedDisplayValue(min, unitMultiplier, suffix)
+    return formattedDisplayValue(min, suffix)
   }
   if (parsedValue > max) {
-    return formattedDisplayValue(max, unitMultiplier, suffix)
+    return formattedDisplayValue(max, suffix)
   }
-  return formattedDisplayValue(parsedValue, unitMultiplier, suffix)
+  return formattedDisplayValue(parsedValue, suffix)
 }
 
 class NumericStepper extends Component {
@@ -85,7 +85,6 @@ class NumericStepper extends Component {
       maxValue,
       defaultValue,
       suffix,
-      unitMultiplier,
     } = props
 
     const validatedValue = validateValue(
@@ -99,11 +98,10 @@ class NumericStepper extends Component {
       value: validatedValue,
       ...(!state.inputFocused && {
         displayValue: validateDisplayValue(
-          value,
+          validatedValue,
           minValue,
           maxValue,
-          suffix,
-          unitMultiplier
+          suffix
         ),
       }),
     }
@@ -118,7 +116,6 @@ class NumericStepper extends Component {
       defaultValue,
       onChange,
       suffix,
-      unitMultiplier,
     } = this.props
 
     const validatedValue = validateValue(
@@ -133,7 +130,6 @@ class NumericStepper extends Component {
       minValue,
       maxValue,
       suffix,
-      unitMultiplier
     )
 
     this.setState({
@@ -157,11 +153,11 @@ class NumericStepper extends Component {
   }
 
   handleIncreaseValue = event => {
-    this.changeValue(this.state.value + 1, event)
+    this.changeValue(this.state.value + this.props.unitMultiplier, event)
   }
 
   handleDecreaseValue = event => {
-    this.changeValue(this.state.value - 1, event)
+    this.changeValue(this.state.value - this.props.unitMultiplier, event)
   }
 
   handleFocusInput = e => {
