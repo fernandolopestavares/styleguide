@@ -6,7 +6,7 @@ import styles from '../Input/Input.css'
 const normalizeMin = min => (min == null ? -Infinity : min)
 const normalizeMax = max => (max == null ? Infinity : max)
 
-const validateValue = (value, min, max, defaultValue) => {
+const validateValue = (value, min, max, defaultValue, unitMultiplier) => {
   // This function always return a valid numeric value from the current input.
   // Compare with the function validateDisplayValue
   min = normalizeMin(min)
@@ -16,12 +16,17 @@ const validateValue = (value, min, max, defaultValue) => {
     if (defaultValue < min) return min
     if (defaultValue > max) return max
     return defaultValue
-  } else if (value < min) {
+  }
+
+  const multipliedValue = Math.round((value / unitMultiplier)) * unitMultiplier
+
+  if (multipliedValue < min) {
     return min
-  } else if (value > max) {
+  } else if (multipliedValue > max) {
     return max
   }
-  return parseInt(value, 10)
+
+  return parseInt(multipliedValue, 10)
 }
 
 const formattedDisplayValue = (value, suffix) => {
@@ -85,13 +90,15 @@ class NumericStepper extends Component {
       maxValue,
       defaultValue,
       suffix,
+      unitMultiplier,
     } = props
 
     const validatedValue = validateValue(
       value,
       minValue,
       maxValue,
-      defaultValue
+      defaultValue,
+      unitMultiplier
     )
 
     return {
@@ -116,13 +123,15 @@ class NumericStepper extends Component {
       defaultValue,
       onChange,
       suffix,
+      unitMultiplier,
     } = this.props
 
     const validatedValue = validateValue(
       parsedValue,
       minValue,
       maxValue,
-      defaultValue
+      defaultValue,
+      unitMultiplier
     )
 
     const displayValue = validateDisplayValue(
